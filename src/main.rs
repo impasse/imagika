@@ -16,6 +16,8 @@ use zip::{CompressionMethod, ZipWriter};
 use zip::write::FileOptions;
 
 use imagika::errors::ImageikaError;
+use regex::Regex;
+use lazy_static::lazy_static;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "imagika", about = "A tool for compress pptx")]
@@ -25,6 +27,11 @@ struct Opts {
     #[structopt(short, long)]
     output: String,
 }
+
+lazy_static! {
+    static ref MEDIA_FILES: Regex = Regex::new(r"(?i)^ppt/media/.+").unwrap();
+}
+
 
 fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRef<Path> {
     let reader = ImageReader::open(input)?
@@ -44,7 +51,7 @@ fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRef<Pa
     // Multiple RGB channels of source image by alpha channel
     alpha_mul_div
         .multiply_alpha_inplace(&mut src_image.dst_view())
-        .unwrap();
+        ?;
 
     let ratio = img.width() as f32 / img.height() as f32;
     let base = 1000 as f32;
@@ -63,7 +70,7 @@ fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRef<Pa
     resizer.resize(&src_image.src_view(), &mut dst_view);
 
     // Divide RGB channels of destination image by alpha
-    alpha_mul_div.divide_alpha_inplace(&mut dst_view).unwrap();
+    alpha_mul_div.divide_alpha_inplace(&mut dst_view)?;
 
     image::save_buffer_with_format(output,dst_image.get_buffer(), dst_width.get(), dst_height.get(), ColorType::Rgba8, format.unwrap())?;
     Ok(())
@@ -71,10 +78,10 @@ fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRef<Pa
 
 fn compress_pptx(input: String, output: String) -> std::result::Result<(), std::io::Error> {
     let input_path = path::Path::new(&input);
-    let input_file = fs::File::open(input_path).unwrap();
-    let mut archive = zip::ZipArchive::new(input_file).unwrap();
+    let input_file = fs::File::open(input_path)?;
+    let mut archive = zip::ZipArchive::new(input_file)?;
     let media: Vec<String> = archive.file_names()
-        .filter(|file_name| file_name.starts_with("ppt/media"))
+        .filter(|file_name| MEDIA_FILES.is_match(file_name))
         .map(|s| String::from(s))
         .collect();
     let mut extracted: HashMap<String, NamedTempFile> = HashMap::new();
@@ -106,7 +113,7 @@ fn compress_pptx(input: String, output: String) -> std::result::Result<(), std::
         }
     });
 
-    let output_file = std::fs::File::create(output).unwrap();
+    let output_file = std::fs::File::create(output)?;
     let mut writer = ZipWriter::new(output_file);
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
@@ -128,14 +135,14 @@ fn compress_pptx(input: String, output: String) -> std::result::Result<(), std::
             writer.write_all(&buf).unwrap();
         }
     }
-    writer.finish().unwrap();
+    writer.finish()?;
     Ok(())
 }
 
 fn main() {
     let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
     unsafe {
-        resizer.set_cpu_extensions(fr::CpuExtensions::Sse4_1);
+        resizer.set_cpu_extensions(Default::default());
     }
 
     let opts: Opts = Opts::from_args();
