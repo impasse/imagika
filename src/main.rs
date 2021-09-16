@@ -49,9 +49,7 @@ fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRef<Pa
     let alpha_mul_div: fr::MulDiv = Default::default();
 
     // Multiple RGB channels of source image by alpha channel
-    alpha_mul_div
-        .multiply_alpha_inplace(&mut src_image.dst_view())
-        ?;
+    alpha_mul_div.multiply_alpha_inplace(&mut src_image.dst_view())?;
 
     let ratio = img.width() as f32 / img.height() as f32;
     let base = 1000 as f32;
