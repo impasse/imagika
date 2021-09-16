@@ -108,7 +108,7 @@ fn compress_pptx(input: String, output: String) -> std::result::Result<(), std::
                 println!("Compress {} success", file_name);
             }
             Err(e) => {
-                println!("Compress {} failed:\n{:?}", file_name, e);
+                println!("Compress {} failed: {:?}", file_name, e);
             }
         }
     });
