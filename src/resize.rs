@@ -25,6 +25,11 @@ pub fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRe
     // Multiple RGB channels of source image by alpha channel
     alpha_mul_div.multiply_alpha_inplace(&mut src_image.dst_view())?;
 
+    // skip small image
+    if img.width() < 1000 && img.height() < 1000 {
+        return Ok(());
+    }
+
     let is_horizontal = img.width() > img.height();
     let target_width;
     let target_height;
