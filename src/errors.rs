@@ -1,8 +1,7 @@
 use fast_image_resize::{ImageBufferError, MulDivImageError};
 use image::ImageError;
 
-
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum ImageikaError {
     IoError(std::io::Error),
     ImageError(ImageError),
