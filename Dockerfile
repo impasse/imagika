@@ -6,7 +6,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     RUST_VERSION=1.55.0
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends wget ca-certificates \
+  && apt-get install -y --no-install-recommends wget ca-certificates build-essential \
   && rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
