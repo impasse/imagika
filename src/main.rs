@@ -138,11 +138,6 @@ fn compress_pptx(input: String, output: String) -> std::result::Result<(), std::
 }
 
 fn main() {
-    let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
-    unsafe {
-        resizer.set_cpu_extensions(Default::default());
-    }
-
     let opts: Opts = Opts::from_args();
 
     println!("Thread pool size: {}", rayon::current_num_threads());
