@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::copy;
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -31,10 +31,7 @@ pub fn compress_pptx(input: String, output: String) -> std::result::Result<(), s
     media.iter().for_each(|file_name| {
         if let Ok(mut file) = archive.by_name(file_name) {
             let mut tmp_file = tempfile::NamedTempFile::new().unwrap();
-            let mut buf: Vec<u8> = Vec::new();
-            file.read_to_end(&mut buf).unwrap();
-            tmp_file.write_all(&buf).unwrap();
-            tmp_file.flush().unwrap();
+            copy(&mut file, &mut tmp_file).unwrap();
             extracted.insert(file_name.clone(), tmp_file);
         }
     });
@@ -66,14 +63,10 @@ pub fn compress_pptx(input: String, output: String) -> std::result::Result<(), s
         if replacement.contains_key(file.name()) {
             writer.start_file(file.name(), options).unwrap();
             let image = replacement.get_mut(file.name()).unwrap();
-            let mut buf: Vec<u8> = Vec::new();
-            image.read_to_end(&mut buf).unwrap();
-            writer.write_all(&buf).unwrap();
+            copy(image, &mut writer)?;
         } else {
             writer.start_file(file.name(), options).unwrap();
-            let mut buf: Vec<u8> = Vec::new();
-            file.read_to_end(&mut buf).unwrap();
-            writer.write_all(&buf).unwrap();
+            copy(&mut file, &mut writer)?;
         }
     }
     writer.finish()?;
