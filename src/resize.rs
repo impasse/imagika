@@ -25,12 +25,21 @@ pub fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRe
     // Multiple RGB channels of source image by alpha channel
     alpha_mul_div.multiply_alpha_inplace(&mut src_image.dst_view())?;
 
+    let is_horizontal = img.width() > img.height();
+    let target_width;
+    let target_height;
     let ratio = img.width() as f32 / img.height() as f32;
-    let base = 1000 as f32;
+    if is_horizontal {
+        target_width = 1000;
+        target_height = (1000.0 / ratio) as u32;
+    } else {
+        target_height = 1000;
+        target_width = (1000.0 * ratio) as u32;
+    }
 
     // Create wrapper that own data of destination image
-    let dst_width = NonZeroU32::new(base as u32).unwrap();
-    let dst_height = NonZeroU32::new((base / ratio) as u32).unwrap();
+    let dst_width = NonZeroU32::new(target_width).unwrap();
+    let dst_height = NonZeroU32::new(target_height).unwrap();
     let mut dst_image = fr::ImageData::new(dst_width, dst_height, src_image.pixel_type());
 
     // Get mutable view of destination image data
