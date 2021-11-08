@@ -14,7 +14,7 @@ pub fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRe
     let img = reader.decode()?;
     let src_width = NonZeroU32::new(img.width()).unwrap();
     let src_height = NonZeroU32::new(img.height()).unwrap();
-    let mut src_image = fr::ImageData::from_vec_u8(
+    let mut src_image = fr::Image::from_vec_u8(
         src_width,
         src_height,
         img.to_rgba8().into_raw(),
@@ -23,7 +23,7 @@ pub fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRe
     let alpha_mul_div: fr::MulDiv = Default::default();
 
     // Multiple RGB channels of source image by alpha channel
-    alpha_mul_div.multiply_alpha_inplace(&mut src_image.dst_view())?;
+    alpha_mul_div.multiply_alpha_inplace(&mut src_image.view_mut())?;
 
     // skip small image
     if img.width() < 1000 && img.height() < 1000 {
@@ -45,19 +45,19 @@ pub fn resize<P>(input: P, output: P) -> Result<(), ImageikaError> where P: AsRe
     // Create wrapper that own data of destination image
     let dst_width = NonZeroU32::new(target_width).unwrap();
     let dst_height = NonZeroU32::new(target_height).unwrap();
-    let mut dst_image = fr::ImageData::new(dst_width, dst_height, src_image.pixel_type());
+    let mut dst_image = fr::Image::new(dst_width, dst_height, src_image.pixel_type());
 
     // Get mutable view of destination image data
-    let mut dst_view = dst_image.dst_view();
+    let mut dst_view = dst_image.view_mut();
 
     // Create Resizer instance and resize source image
     // into buffer of destination image
     let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
-    resizer.resize(&src_image.src_view(), &mut dst_view);
+    resizer.resize(&src_image.view(), &mut dst_view);
 
     // Divide RGB channels of destination image by alpha
     alpha_mul_div.divide_alpha_inplace(&mut dst_view)?;
 
-    image::save_buffer_with_format(output, dst_image.get_buffer(), dst_width.get(), dst_height.get(), ColorType::Rgba8, format.unwrap())?;
+    image::save_buffer_with_format(output, dst_image.buffer(), dst_width.get(), dst_height.get(), ColorType::Rgba8, format.unwrap())?;
     Ok(())
 }
