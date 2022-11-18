@@ -6,11 +6,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-zip = "0.5"
+zip = "0.6.3"
 tempfile = "3"
 structopt = "0.3"
 rayon = "1.5.1"
 regex = "1.5.4"
-fast_image_resize = "0.4.0"
-image = "0.23.14"
+fast_image_resize = "2.1.0"
+image = "0.24.5"
 lazy_static = "1.4.0"
